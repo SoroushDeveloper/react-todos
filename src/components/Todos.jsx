@@ -1,29 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TodoList from "./TodoList";
 import { v4 as uuidv4 } from 'uuid';
 
 export default function Todos() {
 
-    const [todos, setTodos] = useState([
-        {
-            title: 'Todo One',
-            status: true,
-            id: uuidv4(),
-        }, {
-            title: 'Todo Two',
-            status: false,
-            id: uuidv4(),
-        }
-    ]);
+    const [todos, setTodos] = useState([]);
 
     const addNewTodohandler = (event) => {
         if(event.key === 'Enter' && event.target.value !== "") {
+            let uuid = uuidv4();
             setTodos([
                 ...todos,
                 {
                     title: event.target.value,
                     status: false,
-                    id: uuidv4(),
+                    id: uuid,
                 }
             ]);
             event.target.value = '';
@@ -58,6 +49,14 @@ export default function Todos() {
         });
         setTodos(newTodos);
     }
+
+    useEffect(() => {
+        setTodos(JSON.parse(localStorage.getItem('todo_list')) ?? []);
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem('todo_list', JSON.stringify(todos));
+    }, [todos]);
 
     return (
 <div className="flex items-center justify-center h-screen">

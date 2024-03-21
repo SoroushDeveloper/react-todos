@@ -6,56 +6,96 @@ export default function Todos() {
 
     const [todos, setTodos] = useState([]);
 
-    const addNewTodohandler = (event) => {
+    const addNewTodoHandler = async (event) => {
         if (event.key === 'Enter' && event.target.value !== "") {
-            let uuid = uuidv4();
-            setTodos([
-                ...todos,
-                {
-                    title: event.target.value,
-                    status: false,
-                    id: uuid,
-                }
-            ]);
+            let newTodo = {
+                title: event.target.value,
+                status: false,
+            }
             event.target.value = '';
+            try {
+                let res = await fetch('https://65fbe65214650eb2100af627.mockapi.io/todos', {
+                    method: 'post',
+                    headers: {'content-type': 'application/json'},
+                    body: JSON.stringify(newTodo),
+                });
+                let todoData = await res.json();
+                setTodos([
+                    ...todos,
+                    todoData,
+                ]);
+            } catch (error) {
+                console.log(error);
+            }
         }
     }
 
-    const deleteTodoHandler = (todo) => {
-        let newTodos = todos.filter((todoItem) => {
-            return todo.id != todoItem.id;
+    const deleteTodoHandler = async (todo) => {
+        let res = await fetch('https://65fbe65214650eb2100af627.mockapi.io/todos/' + todo?.id, {
+            method: 'delete',
         });
-        setTodos(newTodos);
+        if (res.ok) {
+            let newTodos = todos.filter((todoItem) => {
+                return todo.id != todoItem.id;
+            });
+            setTodos(newTodos);
+        }
     }
 
-    const toggleTodoStatusHandler = (todo) => {
-        let newTodos = todos.map((todoItem) => {
-            if (todo.id == todoItem.id) {
-                todoItem.status = !todoItem.status;
-                return todoItem;
-            }
-            return todoItem;
+    const toggleTodoStatusHandler = async (todo) => {
+        let res = await fetch('https://65fbe65214650eb2100af627.mockapi.io/todos' + todo?.id, {
+            method: 'put',
+            headers: {'content-type': 'application/json'},
+            body: JSON.stringify({
+                status: !todo?.status,
+            }),
         });
-        setTodos(newTodos);
+        if (res.ok) {
+            let newTodos = todos.map((todoItem) => {
+                if (todo.id == todoItem.id) {
+                    todoItem.status = !todoItem.status;
+                    return todoItem;
+                }
+                return todoItem;
+            });
+            setTodos(newTodos);
+        }
     }
 
-    const editTodoTitleHandler = (todo, newTitle) => {
-        let newTodos = todos.map((todoItem) => {
-            if (todo.id == todoItem.id) {
-                todoItem.title = newTitle;
-                return todoItem;
-            }
-            return todoItem;
+    const editTodoTitleHandler = async (todo, newTitle) => {
+        let res = await fetch('https://65fbe65214650eb2100af627.mockapi.io/todos' + todo?.id, {
+            method: 'put',
+            headers: {'content-type': 'application/json'},
+            body: JSON.stringify({
+                title: newTitle,
+            }),
         });
-        setTodos(newTodos);
+        if (res.ok) {
+            let newTodos = todos.map((todoItem) => {
+                if (todo.id == todoItem.id) {
+                    todoItem.title = newTitle;
+                    return todoItem;
+                }
+                return todoItem;
+            });
+            setTodos(newTodos);
+        }
+    }
+
+    const getTodos = async () => {
+        try {
+            let res = await fetch('https://65fbe65214650eb2100af627.mockapi.io/todos');
+            let todos = await res.json();
+            if (res.ok) {
+                setTodos(todos);
+            }
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     useEffect(() => {
-        setTodos(JSON.parse(localStorage.getItem('todo_list')) ?? []);
-    }, []);
-
-    useEffect(() => {
-        localStorage.setItem('todo_list', JSON.stringify(todos));
+        getTodos();
     }, [todos]);
 
     return (
@@ -67,7 +107,7 @@ export default function Todos() {
                 <div className="relative">
                     <input type="text" placeholder="What needs to be done today?"
                            className="w-full px-2 py-3 border rounded outline-none border-grey-600"
-                           onKeyDown={addNewTodohandler}/>
+                           onKeyDown={addNewTodoHandler}/>
                 </div>
                 <TodoList todos={todos} deleteTodo={deleteTodoHandler} toggleTodoStatus={toggleTodoStatusHandler}
                           editTodoTitle={editTodoTitleHandler}/>

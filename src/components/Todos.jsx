@@ -1,6 +1,6 @@
-import {useEffect, useState} from "react";
+import {useEffect, useReducer, useState} from "react";
 import TodoList from "./TodoList";
-import {v4 as uuidv4} from 'uuid';
+import {toast} from "react-toastify";
 
 export default function Todos() {
 
@@ -24,8 +24,9 @@ export default function Todos() {
                     ...todos,
                     todoData,
                 ]);
+                toast.success('todo created');
             } catch (error) {
-                console.log(error);
+                toast.error(error);
             }
         }
     }
@@ -39,7 +40,10 @@ export default function Todos() {
                 return todo.id != todoItem.id;
             });
             setTodos(newTodos);
+            toast.success('todo deleted');
         }
+        let message = await res.json();
+        toast.error(message);
     }
 
     const toggleTodoStatusHandler = async (todo) => {
